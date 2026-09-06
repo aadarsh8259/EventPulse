@@ -68,3 +68,6 @@ Thumbs.db
 # =========================
 *.log
 logs/
+
+# Django
+db.sqlite3
