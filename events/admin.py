@@ -4,7 +4,7 @@ from .models import CustomUser, Event, TicketType, Booking
 
 @admin.register(CustomUser)
 class CustomUserAdmin(admin.ModelAdmin):
-    list_display = ("username", "email", "is_organizer", "is_staff")
+    list_display = ("username", "email", "is_staff")
     search_fields = ("username", "email")
 
 
