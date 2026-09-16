@@ -6,13 +6,6 @@ from rest_framework.views import APIView
 from .models import Event
 from .serializers import EventSerializer, UserRegistrationSerializer
 
-from django.db.models import Q
-
-events = events.filter(
-    Q(title__icontains=search) |
-    Q(description__icontains=search)
-)
-
 
 class UserRegistrationView(APIView):
     def post(self, request):
@@ -60,10 +53,11 @@ class EventListView(APIView):
         category = request.query_params.get("category")
 
         if search:
+            from django.db.models import Q
+
             events = events.filter(
-                title__icontains=search
-            ) | events.filter(
-                description__icontains=search
+                Q(title__icontains=search)
+                | Q(description__icontains=search)
             )
 
         if category:
