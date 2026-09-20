@@ -6,6 +6,11 @@ from rest_framework.views import APIView
 from .models import Event
 from .serializers import EventSerializer, UserRegistrationSerializer
 
+from .serializers import (
+    BookingSerializer,
+    EventSerializer,
+    UserRegistrationSerializer,
+)
 
 class UserRegistrationView(APIView):
     def post(self, request):
@@ -81,3 +86,26 @@ class EventDetailView(APIView):
         serializer = EventSerializer(event)
 
         return Response(serializer.data)
+
+class BookingCreateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = BookingSerializer(
+            data=request.data
+        )
+
+        if serializer.is_valid():
+            booking = serializer.save(
+                user=request.user
+            )
+
+            return Response(
+                BookingSerializer(booking).data,
+                status=status.HTTP_201_CREATED,
+            )
+
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST,
+        )        
