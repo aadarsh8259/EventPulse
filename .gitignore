@@ -71,3 +71,7 @@ logs/
 
 # Django
 db.sqlite3
+
+# React / Node
+frontend/node_modules/
+frontend/dist/
