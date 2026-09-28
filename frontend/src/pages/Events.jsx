@@ -1,8 +1,13 @@
+import LoadingSpinner from "../components/ui/LoadingSpinner";
+
 export default function Events() {
   return (
-    <div className="p-8">
-      <h1 className="text-3xl font-bold">Events</h1>
-      <p className="mt-2">Event listings will appear here.</p>
+    <div>
+      <h1 className="p-8 text-3xl font-bold">
+        Events
+      </h1>
+
+      <LoadingSpinner text="Loading events..." />
     </div>
   );
 }
