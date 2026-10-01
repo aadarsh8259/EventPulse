@@ -1,8 +1,10 @@
 import { useState } from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { useToast } from "../context/ToastContext";
+import { loginUser } from "../api/auth";
 
 export default function Login() {
+  const navigate = useNavigate();
   const { showToast } = useToast();
 
   const [formData, setFormData] = useState({
@@ -13,6 +15,7 @@ export default function Login() {
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Handle input changes
   const handleChange = (event) => {
     const { name, value } = event.target;
 
@@ -21,12 +24,15 @@ export default function Login() {
       [name]: value,
     }));
 
+    // Clear field error while typing
     setErrors((current) => ({
       ...current,
       [name]: "",
+      submit: "",
     }));
   };
 
+  // Client-side validation
   const validate = () => {
     const newErrors = {};
 
@@ -41,6 +47,7 @@ export default function Login() {
     return newErrors;
   };
 
+  // Submit login form
   const handleSubmit = async (event) => {
     event.preventDefault();
 
@@ -54,22 +61,35 @@ export default function Login() {
     setIsSubmitting(true);
 
     try {
-      // API integration will be added after validation is complete.
-      console.log("Valid login data:", formData);
+      await loginUser({
+        username: formData.username.trim(),
+        password: formData.password,
+      });
 
-      showToast(
-        "Login form is valid.",
-        "success"
-      );
+      showToast("Login successful!", "success");
+
+      // Redirect after successful login
+      navigate("/events");
+    } catch (error) {
+      const message =
+        error.response?.data?.detail ||
+        "Invalid username or password.";
+
+      setErrors({
+        submit: message,
+      });
+
+      showToast(message, "error");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="flex min-h-[calc(100vh-140px)] items-center justify-center px-4 py-10">
-      <div className="w-full max-w-md rounded-2xl border bg-white p-6 shadow-lg sm:p-8">
-        <div className="mb-6">
+    <div className="flex min-h-[calc(100vh-140px)] items-center justify-center bg-gray-50 px-4 py-10">
+      <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-lg sm:p-8">
+        {/* Heading */}
+        <div className="mb-6 text-center">
           <h1 className="text-3xl font-bold text-gray-900">
             Welcome Back
           </h1>
@@ -79,11 +99,13 @@ export default function Login() {
           </p>
         </div>
 
+        {/* Login Form */}
         <form
           onSubmit={handleSubmit}
           noValidate
           className="space-y-5"
         >
+          {/* Username */}
           <div>
             <label
               htmlFor="username"
@@ -98,8 +120,13 @@ export default function Login() {
               type="text"
               value={formData.username}
               onChange={handleChange}
-              className="w-full rounded-lg border px-3 py-2 outline-none focus:border-blue-600"
               placeholder="Enter your username"
+              autoComplete="username"
+              className={`w-full rounded-lg border px-3 py-2 outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100 ${
+                errors.username
+                  ? "border-red-500"
+                  : "border-gray-300"
+              }`}
             />
 
             {errors.username && (
@@ -109,6 +136,7 @@ export default function Login() {
             )}
           </div>
 
+          {/* Password */}
           <div>
             <label
               htmlFor="password"
@@ -123,8 +151,13 @@ export default function Login() {
               type="password"
               value={formData.password}
               onChange={handleChange}
-              className="w-full rounded-lg border px-3 py-2 outline-none focus:border-blue-600"
               placeholder="Enter your password"
+              autoComplete="current-password"
+              className={`w-full rounded-lg border px-3 py-2 outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100 ${
+                errors.password
+                  ? "border-red-500"
+                  : "border-gray-300"
+              }`}
             />
 
             {errors.password && (
@@ -134,17 +167,26 @@ export default function Login() {
             )}
           </div>
 
+          {/* API / Submit Error */}
+          {errors.submit && (
+            <div className="rounded-lg border border-red-200 bg-red-50 p-3">
+              <p className="text-sm text-red-600">
+                {errors.submit}
+              </p>
+            </div>
+          )}
+
+          {/* Login Button */}
           <button
             type="submit"
             disabled={isSubmitting}
             className="w-full rounded-lg bg-blue-600 px-4 py-2.5 font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {isSubmitting
-              ? "Logging in..."
-              : "Login"}
+            {isSubmitting ? "Logging in..." : "Login"}
           </button>
         </form>
 
+        {/* Register Link */}
         <p className="mt-6 text-center text-sm text-gray-600">
           Don't have an account?{" "}
           <Link
