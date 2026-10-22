@@ -24,6 +24,33 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
 from .models import Event
 
+class TicketTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TicketType
+        fields = (
+            "id",
+            "tier_name",
+            "price",
+            "total_quantity",
+            "available_quantity",
+        )
+
+
+class EventDetailSerializer(serializers.ModelSerializer):
+    ticket_types = TicketTypeSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Event
+        fields = (
+            "id",
+            "title",
+            "description",
+            "location",
+            "date",
+            "capacity",
+            "category",
+            "ticket_types",
+        )
 
 class EventSerializer(serializers.ModelSerializer):
     class Meta:
@@ -116,3 +143,4 @@ class BookingSerializer(serializers.ModelSerializer):
             )
 
         return booking
+

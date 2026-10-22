@@ -4,7 +4,11 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import Event
-from .serializers import EventSerializer, UserRegistrationSerializer
+from .serializers import (
+    EventSerializer,
+    EventDetailSerializer,
+    UserRegistrationSerializer,
+)
 
 from .serializers import (
     BookingSerializer,
@@ -76,15 +80,16 @@ class EventListView(APIView):
 class EventDetailView(APIView):
     def get(self, request, pk):
         try:
-            event = Event.objects.get(pk=pk)
+            event = Event.objects.prefetch_related(
+                "ticket_types"
+            ).get(pk=pk)
         except Event.DoesNotExist:
             return Response(
                 {"detail": "Event not found."},
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        serializer = EventSerializer(event)
-
+        serializer = EventDetailSerializer(event)
         return Response(serializer.data)
 
 class BookingCreateView(APIView):
