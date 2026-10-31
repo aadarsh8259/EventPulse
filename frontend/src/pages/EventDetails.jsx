@@ -1,4 +1,4 @@
-
+import TicketSelectionModal from "../components/events/TicketSelectionModal";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router";
 import apiClient from "../api/client";
@@ -9,8 +9,20 @@ export default function EventDetails() {
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [showTicketModal, setShowTicketModal] = useState(false);
+  const [selectedTickets, setSelectedTickets] = useState([]);
+  const [selectionMessage, setSelectionMessage] = useState("");
 
+  
   // Fetch details for the selected event
+
+  const handleConfirmSelection = (selection) => {
+  setSelectedTickets(selection);
+  setShowTicketModal(false);
+  setSelectionMessage(
+    "Your ticket selection has been saved for review. No booking has been created."
+  );
+};
   useEffect(() => {
     let cancelled = false;
 
@@ -161,6 +173,29 @@ export default function EventDetails() {
           </div>
         </section>
 
+        {selectionMessage && (
+  <div
+    role="status"
+    className="mt-5 rounded-xl border border-blue-200 bg-blue-50 p-4"
+  >
+    <p className="font-medium text-blue-900">
+      {selectionMessage}
+    </p>
+
+    <ul className="mt-3 space-y-2 text-sm text-blue-900">
+      {selectedTickets.map((ticket) => (
+        <li key={ticket.id}>
+          {ticket.tier_name} × {ticket.quantity} —{" "}
+          {new Intl.NumberFormat("en-IN", {
+            style: "currency",
+            currency: "INR",
+          }).format(ticket.line_subtotal)}
+        </li>
+      ))}
+    </ul>
+  </div>
+)}
+
         {/* Full description */}
         <section className="mt-8 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8">
           <h2 className="text-2xl font-bold text-gray-900">
@@ -173,6 +208,8 @@ export default function EventDetails() {
         </section>
 
         {/* Ticket tiers */}
+
+   
         <section className="mt-8">
           <h2 className="text-2xl font-bold text-gray-900">
             Available Ticket Tiers
@@ -181,6 +218,18 @@ export default function EventDetails() {
           <p className="mt-2 text-gray-600">
             Compare ticket prices and availability.
           </p>
+
+           <button
+    type="button"
+    onClick={() => {
+      setSelectionMessage("");
+      setShowTicketModal(true);
+    }}
+    disabled={ticketTypes.length === 0}
+    className="mt-5 rounded-lg bg-blue-600 px-5 py-3 font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+  >
+    Select Tickets
+  </button>
 
           {ticketTypes.length === 0 ? (
             <div className="mt-5 rounded-xl border border-gray-200 bg-white p-6 text-gray-600">
@@ -233,6 +282,14 @@ export default function EventDetails() {
           )}
         </section>
       </div>
+
+      {showTicketModal && (
+  <TicketSelectionModal
+    ticketTypes={ticketTypes}
+    onClose={() => setShowTicketModal(false)}
+    onConfirm={handleConfirmSelection}
+  />
+)}
     </main>
   );
 }
