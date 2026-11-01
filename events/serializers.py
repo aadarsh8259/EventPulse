@@ -144,3 +144,44 @@ class BookingSerializer(serializers.ModelSerializer):
 
         return booking
 
+class BookingTicketInfoSerializer(serializers.ModelSerializer):
+    event_title = serializers.CharField(
+        source="event.title",
+        read_only=True
+    )
+
+    event_date = serializers.DateTimeField(
+        source="event.date",
+        read_only=True
+    )
+
+    event_location = serializers.CharField(
+        source="event.location",
+        read_only=True
+    )
+
+    class Meta:
+        model = TicketType
+        fields = (
+            "id",
+            "tier_name",
+            "price",
+            "event_title",
+            "event_date",
+            "event_location",
+        )
+
+
+class BookingDetailSerializer(serializers.ModelSerializer):
+    ticket_type = BookingTicketInfoSerializer(read_only=True)
+
+    class Meta:
+        model = Booking
+        fields = (
+            "id",
+            "ticket_type",
+            "quantity",
+            "total_amount",
+            "booking_status",
+            "booked_at",
+        )

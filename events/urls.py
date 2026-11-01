@@ -7,12 +7,12 @@ from .views import (
     UserRegistrationView,
 )
 from .views import (
-    BookingCreateView,
-    EventDetailView,
-    EventListView,
-    ProfileView,
     UserRegistrationView,
+    ProfileView,
+    EventListView,
+    EventDetailView,
     BookingCreateView,
+    BookingDetailView,
 )
 
 urlpatterns = [
@@ -22,6 +22,12 @@ urlpatterns = [
 
     path("events/", EventListView.as_view(), name="event-list"),
     path("events/<int:pk>/", EventDetailView.as_view(), name="event-detail"),
+
+    path(
+    "bookings/<int:pk>/",
+    BookingDetailView.as_view(),
+    name="booking-detail",
+),
 
 path(
     "bookings/",

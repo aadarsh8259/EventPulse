@@ -2,12 +2,14 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
+from .models import Booking
 from .models import Event
+from .serializers import BookingDetailSerializer
 from .serializers import (
     EventSerializer,
     EventDetailSerializer,
     UserRegistrationSerializer,
+    BookingDetailSerializer,
 )
 
 from .serializers import (
@@ -114,3 +116,26 @@ class BookingCreateView(APIView):
             serializer.errors,
             status=status.HTTP_400_BAD_REQUEST,
         )        
+
+class BookingDetailView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        try:
+            booking = Booking.objects.select_related(
+                "ticket_type",
+                "ticket_type__event",
+            ).get(
+                pk=pk,
+                user=request.user,
+            )
+
+        except Booking.DoesNotExist:
+            return Response(
+                {"detail": "Booking not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        serializer = BookingDetailSerializer(booking)
+
+        return Response(serializer.data)
