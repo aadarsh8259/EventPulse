@@ -1,6 +1,6 @@
 import TicketSelectionModal from "../components/events/TicketSelectionModal";
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router";
+import { Link, useNavigate, useParams } from "react-router";
 import apiClient from "../api/client";
 
 export default function EventDetails() {
@@ -11,17 +11,65 @@ export default function EventDetails() {
   const [error, setError] = useState("");
   const [showTicketModal, setShowTicketModal] = useState(false);
   const [selectedTickets, setSelectedTickets] = useState([]);
-  const [selectionMessage, setSelectionMessage] = useState("");
 
+  const navigate = useNavigate();
+
+const [bookingLoading, setBookingLoading] = useState(false);
+const [selectionMessage, setSelectionMessage] = useState("");
   
   // Fetch details for the selected event
 
-  const handleConfirmSelection = (selection) => {
-  setSelectedTickets(selection);
-  setShowTicketModal(false);
-  setSelectionMessage(
-    "Your ticket selection has been saved for review. No booking has been created."
-  );
+  const handleConfirmSelection = async (selection) => {
+  if (bookingLoading) return;
+
+  if (!selection.length) {
+    return;
+  }
+
+  // Current backend supports one ticket tier per booking.
+  if (selection.length !== 1) {
+    setSelectionMessage(
+      "Please select one ticket tier per booking."
+    );
+    return;
+  }
+
+  const ticket = selection[0];
+
+  try {
+    setBookingLoading(true);
+    setSelectionMessage("");
+
+    // Send checkout request to Django
+    const response = await apiClient.post("/bookings/", {
+      ticket_type: ticket.id,
+      quantity: ticket.quantity,
+    });
+
+    const booking = response.data;
+
+    if (!booking.id) {
+      throw new Error("The server did not return a booking ID.");
+    }
+
+    // Navigate to digital booking pass
+    navigate(`/booking-confirmation/${booking.id}`);
+
+  } catch (error) {
+    const data = error.response?.data;
+
+    const message =
+      data?.quantity?.[0] ||
+      data?.ticket_type?.[0] ||
+      data?.detail ||
+      error.message ||
+      "Booking failed. Please try again.";
+
+    setSelectionMessage(message);
+
+  } finally {
+    setBookingLoading(false);
+  }
 };
   useEffect(() => {
     let cancelled = false;

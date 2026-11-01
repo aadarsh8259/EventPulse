@@ -13,6 +13,8 @@ export default function TicketSelectionModal({
   ticketTypes = [],
   onClose,
   onConfirm,
+  isSubmitting = false,
+  errorMessage = "",
 }) {
   const [quantities, setQuantities] = useState(() =>
     Object.fromEntries(ticketTypes.map((ticket) => [ticket.id, 0]))
@@ -194,7 +196,16 @@ export default function TicketSelectionModal({
             rate must be confirmed before payment.
           </p>
         </section>
-
+        {errorMessage && (
+            <div
+            role="alert"
+            className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3"
+            >
+                <p className="text-sm text-red-700">
+                    {errorMessage}
+                    </p>
+                    </div>
+                )}
         {/* Modal actions */}
         <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
           <button
@@ -206,15 +217,16 @@ export default function TicketSelectionModal({
           </button>
 
           <button
-            type="button"
-            disabled={selectedTickets.length === 0}
-            onClick={() => onConfirm(selectedTickets)}
-            className="rounded-lg bg-blue-600 px-5 py-3 font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+          type="button"
+          disabled={selectedTickets.length === 0 || isSubmitting}
+          onClick={() => onConfirm(selectedTickets)}
+          className="rounded-lg bg-blue-600 px-5 py-3 font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            Confirm Selection
-          </button>
+             {isSubmitting ? "Processing Booking..." : "Confirm Selection"}
+             </button>
         </div>
       </section>
     </div>
   );
 }
+
