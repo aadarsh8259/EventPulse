@@ -1,115 +1,108 @@
+
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
-import { useToast } from "../context/ToastContext";
-import { loginUser } from "../api/auth";
+import apiClient from "../api/client";
 
 export default function Login() {
   const navigate = useNavigate();
-  const { showToast } = useToast();
 
   const [formData, setFormData] = useState({
     username: "",
     password: "",
   });
 
-  const [errors, setErrors] = useState({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  // Handle input changes
-  const handleChange = (event) => {
-    const { name, value } = event.target;
+  // Update input values
+  const handleChange = (e) => {
+    const { name, value } = e.target;
 
-    setFormData((current) => ({
-      ...current,
+    setFormData((prev) => ({
+      ...prev,
       [name]: value,
     }));
-
-    // Clear field error while typing
-    setErrors((current) => ({
-      ...current,
-      [name]: "",
-      submit: "",
-    }));
   };
 
-  // Client-side validation
-  const validate = () => {
-    const newErrors = {};
+  // Handle login
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-    if (!formData.username.trim()) {
-      newErrors.username = "Username is required.";
-    }
-
-    if (!formData.password) {
-      newErrors.password = "Password is required.";
-    }
-
-    return newErrors;
-  };
-
-  // Submit login form
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-
-    const validationErrors = validate();
-
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      return;
-    }
-
-    setIsSubmitting(true);
+    setError("");
+    setLoading(true);
 
     try {
-      await loginUser({
-        username: formData.username.trim(),
+      // Send login credentials to Django JWT endpoint
+      const response = await apiClient.post("/token/", {
+        username: formData.username,
         password: formData.password,
       });
 
-      showToast("Login successful!", "success");
+      const { access, refresh } = response.data;
+
+      // Verify that Django returned both tokens
+      if (!access || !refresh) {
+        throw new Error(
+          "Login response did not contain valid authentication tokens."
+        );
+      }
+
+      // Store JWT tokens in browser local storage
+      localStorage.setItem("access", access);
+      localStorage.setItem("refresh", refresh);
 
       // Redirect after successful login
-      navigate("/events");
-    } catch (error) {
-      const message =
-        error.response?.data?.detail ||
-        "Invalid username or password.";
-
-      setErrors({
-        submit: message,
+      navigate("/organizer/dashboard", {
+        replace: true,
       });
 
-      showToast(message, "error");
+    } catch (err) {
+      console.error(
+        "Login error:",
+        err.response?.data || err.message
+      );
+
+      const responseData = err.response?.data;
+
+      if (err.response?.status === 401) {
+        setError("Invalid username or password.");
+      } else if (responseData?.detail) {
+        setError(responseData.detail);
+      } else if (err.message) {
+        setError(err.message);
+      } else {
+        setError("Unable to log in. Please try again.");
+      }
+
     } finally {
-      setIsSubmitting(false);
+      setLoading(false);
     }
   };
 
   return (
-    <div className="flex min-h-[calc(100vh-140px)] items-center justify-center bg-gray-50 px-4 py-10">
-      <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-lg sm:p-8">
+    <main className="min-h-screen bg-gray-50 px-4 py-12 flex items-center justify-center">
+
+      <div className="w-full max-w-xl rounded-3xl border border-gray-200 bg-white p-8 shadow-lg sm:p-12">
+
         {/* Heading */}
-        <div className="mb-6 text-center">
-          <h1 className="text-3xl font-bold text-gray-900">
+        <div className="mb-8 text-center">
+          <h1 className="text-4xl font-bold text-gray-900">
             Welcome Back
           </h1>
 
-          <p className="mt-2 text-sm text-gray-600">
-            Login to your EventPulse account.
+          <p className="mt-3 text-lg text-gray-600">
+            Log in to your EventPulse account.
           </p>
         </div>
 
         {/* Login Form */}
-        <form
-          onSubmit={handleSubmit}
-          noValidate
-          className="space-y-5"
-        >
+        <form onSubmit={handleSubmit} className="space-y-6">
+
           {/* Username */}
           <div>
             <label
               htmlFor="username"
-              className="mb-1 block text-sm font-medium text-gray-700"
+              className="mb-2 block font-semibold text-gray-800"
             >
               Username
             </label>
@@ -122,25 +115,16 @@ export default function Login() {
               onChange={handleChange}
               placeholder="Enter your username"
               autoComplete="username"
-              className={`w-full rounded-lg border px-3 py-2 outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100 ${
-                errors.username
-                  ? "border-red-500"
-                  : "border-gray-300"
-              }`}
+              required
+              className="w-full rounded-xl border border-gray-300 px-4 py-4 text-lg outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
             />
-
-            {errors.username && (
-              <p className="mt-1 text-sm text-red-600">
-                {errors.username}
-              </p>
-            )}
           </div>
 
           {/* Password */}
           <div>
             <label
               htmlFor="password"
-              className="mb-1 block text-sm font-medium text-gray-700"
+              className="mb-2 block font-semibold text-gray-800"
             >
               Password
             </label>
@@ -153,50 +137,44 @@ export default function Login() {
               onChange={handleChange}
               placeholder="Enter your password"
               autoComplete="current-password"
-              className={`w-full rounded-lg border px-3 py-2 outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100 ${
-                errors.password
-                  ? "border-red-500"
-                  : "border-gray-300"
-              }`}
+              required
+              className="w-full rounded-xl border border-gray-300 px-4 py-4 text-lg outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
             />
-
-            {errors.password && (
-              <p className="mt-1 text-sm text-red-600">
-                {errors.password}
-              </p>
-            )}
           </div>
 
-          {/* API / Submit Error */}
-          {errors.submit && (
-            <div className="rounded-lg border border-red-200 bg-red-50 p-3">
-              <p className="text-sm text-red-600">
-                {errors.submit}
-              </p>
+          {/* Error Message */}
+          {error && (
+            <div
+              role="alert"
+              className="rounded-xl border border-red-200 bg-red-50 p-4 text-red-600"
+            >
+              {error}
             </div>
           )}
 
-          {/* Login Button */}
+          {/* Submit Button */}
           <button
             type="submit"
-            disabled={isSubmitting}
-            className="w-full rounded-lg bg-blue-600 px-4 py-2.5 font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+            disabled={loading}
+            className="w-full rounded-xl bg-blue-600 px-6 py-4 text-lg font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {isSubmitting ? "Logging in..." : "Login"}
+            {loading ? "Logging in..." : "Login"}
           </button>
+
         </form>
 
-        {/* Register Link */}
-        <p className="mt-6 text-center text-sm text-gray-600">
+        {/* Registration Link */}
+        <div className="mt-8 text-center text-gray-600">
           Don't have an account?{" "}
           <Link
             to="/register"
-            className="font-medium text-blue-600 hover:underline"
+            className="font-semibold text-blue-600 hover:text-blue-800"
           >
-            Create one
+            Create Account
           </Link>
-        </p>
+        </div>
+
       </div>
-    </div>
+    </main>
   );
 }
