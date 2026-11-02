@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
@@ -13,6 +14,14 @@ class Event(models.Model):
     date = models.DateTimeField()
     capacity = models.PositiveIntegerField()
     category = models.CharField(max_length=100, default="Other")
+
+    organizer = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="organized_events",
+    )
 
     def __str__(self):
         return self.title

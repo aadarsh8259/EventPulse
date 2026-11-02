@@ -1,3 +1,4 @@
+import OrganizerDashboard from "./pages/OrganizerDashboard";
 import { Route, Routes } from "react-router";
 
 import Layout from "./components/layout/Layout";
@@ -12,6 +13,7 @@ import BookingConfirmation from "./pages/BookingConfirmation";
 function App() {
   return (
     <Routes>
+      
       <Route element={<Layout />}>
         <Route path="/" element={<Home />} />
 
@@ -25,6 +27,10 @@ function App() {
         <Route
           path="/booking-confirmation/:id"
           element={<BookingConfirmation />}
+        />
+        <Route
+          path="/organizer/dashboard"
+          element={<OrganizerDashboard />}
         />
 
         <Route path="/login" element={<Login />} />

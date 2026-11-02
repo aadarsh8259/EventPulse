@@ -1,4 +1,9 @@
 from django.urls import path
+from .views import (
+    # Keep your existing imports
+    OrganizerDashboardView,
+)
+
 
 from .views import (
     EventDetailView,
@@ -19,6 +24,11 @@ urlpatterns = [
     path("register/", UserRegistrationView.as_view(), name="register"),
     path("profile/", ProfileView.as_view(), name="profile"),
     path("bookings/", BookingCreateView.as_view(), name="booking-create"),
+    path(
+    "organizer/dashboard/",
+    OrganizerDashboardView.as_view(),
+    name="organizer-dashboard",
+),
 
     path("events/", EventListView.as_view(), name="event-list"),
     path("events/<int:pk>/", EventDetailView.as_view(), name="event-detail"),

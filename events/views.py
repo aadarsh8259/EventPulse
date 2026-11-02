@@ -1,3 +1,7 @@
+from decimal import Decimal
+
+from django.db.models import Sum
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -139,3 +143,39 @@ class BookingDetailView(APIView):
         serializer = BookingDetailSerializer(booking)
 
         return Response(serializer.data)
+
+
+class OrganizerDashboardView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+
+        # Get confirmed bookings belonging to this organizer
+        bookings = Booking.objects.filter(
+            ticket_type__event__organizer=request.user,
+            booking_status__iexact="CONFIRMED",
+        )
+
+        # Calculate revenue and tickets sold
+        summary = bookings.aggregate(
+            total_revenue=Sum("total_amount"),
+            tickets_sold=Sum("quantity"),
+        )
+
+        total_revenue = (
+            summary["total_revenue"] or Decimal("0.00")
+        )
+
+        tickets_sold = summary["tickets_sold"] or 0
+
+        # Count upcoming events belonging to this organizer
+        active_events = Event.objects.filter(
+            organizer=request.user,
+            date__gte=timezone.now(),
+        ).count()
+
+        return Response({
+            "total_revenue": format(total_revenue, ".2f"),
+            "tickets_sold": tickets_sold,
+            "active_events": active_events,
+        })
