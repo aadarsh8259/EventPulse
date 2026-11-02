@@ -1,14 +1,21 @@
+
 from django.contrib.auth import get_user_model
 from django.db import transaction
+from django.utils import timezone
+
 from rest_framework import serializers
 
 from .models import Booking, Event, TicketType
+
 
 User = get_user_model()
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True, min_length=8)
+    password = serializers.CharField(
+        write_only=True,
+        min_length=8
+    )
 
     class Meta:
         model = User
@@ -22,7 +29,6 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         )
         return user
 
-from .models import Event
 
 class TicketTypeSerializer(serializers.ModelSerializer):
     class Meta:
@@ -37,7 +43,10 @@ class TicketTypeSerializer(serializers.ModelSerializer):
 
 
 class EventDetailSerializer(serializers.ModelSerializer):
-    ticket_types = TicketTypeSerializer(many=True, read_only=True)
+    ticket_types = TicketTypeSerializer(
+        many=True,
+        read_only=True
+    )
 
     class Meta:
         model = Event
@@ -52,6 +61,7 @@ class EventDetailSerializer(serializers.ModelSerializer):
             "ticket_types",
         )
 
+
 class EventSerializer(serializers.ModelSerializer):
     class Meta:
         model = Event
@@ -64,6 +74,8 @@ class EventSerializer(serializers.ModelSerializer):
             "capacity",
             "category",
         )
+
+
 class BookingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Booking
@@ -95,14 +107,12 @@ class BookingSerializer(serializers.ModelSerializer):
         quantity = attrs["quantity"]
 
         if quantity > ticket_type.available_quantity:
-            raise serializers.ValidationError(
-                {
-                    "quantity": (
-                        f"Only {ticket_type.available_quantity} "
-                        "tickets are available."
-                    )
-                }
-            )
+            raise serializers.ValidationError({
+                "quantity": (
+                    f"Only {ticket_type.available_quantity} "
+                    "tickets are available."
+                )
+            })
 
         return attrs
 
@@ -119,14 +129,12 @@ class BookingSerializer(serializers.ModelSerializer):
             )
 
             if quantity > ticket_type.available_quantity:
-                raise serializers.ValidationError(
-                    {
-                        "quantity": (
-                            f"Only {ticket_type.available_quantity} "
-                            "tickets are available."
-                        )
-                    }
-                )
+                raise serializers.ValidationError({
+                    "quantity": (
+                        f"Only {ticket_type.available_quantity} "
+                        "tickets are available."
+                    )
+                })
 
             total_amount = ticket_type.price * quantity
 
@@ -138,11 +146,13 @@ class BookingSerializer(serializers.ModelSerializer):
             )
 
             ticket_type.available_quantity -= quantity
+
             ticket_type.save(
                 update_fields=["available_quantity"]
             )
 
         return booking
+
 
 class BookingTicketInfoSerializer(serializers.ModelSerializer):
     event_title = serializers.CharField(
@@ -173,7 +183,9 @@ class BookingTicketInfoSerializer(serializers.ModelSerializer):
 
 
 class BookingDetailSerializer(serializers.ModelSerializer):
-    ticket_type = BookingTicketInfoSerializer(read_only=True)
+    ticket_type = BookingTicketInfoSerializer(
+        read_only=True
+    )
 
     class Meta:
         model = Booking
@@ -185,3 +197,96 @@ class BookingDetailSerializer(serializers.ModelSerializer):
             "booking_status",
             "booked_at",
         )
+
+
+class TicketTierCreateSerializer(serializers.Serializer):
+    tier_name = serializers.CharField(
+        max_length=100
+    )
+
+    price = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        min_value=0
+    )
+
+    total_quantity = serializers.IntegerField(
+        min_value=1
+    )
+
+
+class EventCreateSerializer(serializers.ModelSerializer):
+    ticket_types = TicketTierCreateSerializer(
+        many=True,
+        write_only=True
+    )
+
+    class Meta:
+        model = Event
+
+        fields = (
+            "id",
+            "title",
+            "description",
+            "location",
+            "date",
+            "capacity",
+            "category",
+            "ticket_types",
+        )
+
+        read_only_fields = ("id",)
+
+    def validate_date(self, value):
+        if value <= timezone.now():
+            raise serializers.ValidationError(
+                "Event date must be in the future."
+            )
+
+        return value
+
+    def validate(self, attrs):
+        ticket_types = attrs.get("ticket_types", [])
+
+        if not ticket_types:
+            raise serializers.ValidationError({
+                "ticket_types": (
+                    "At least one ticket tier is required."
+                )
+            })
+
+        total_tickets = sum(
+            ticket["total_quantity"]
+            for ticket in ticket_types
+        )
+
+        if total_tickets > attrs["capacity"]:
+            raise serializers.ValidationError({
+                "ticket_types": (
+                    "Total ticket quantities cannot exceed "
+                    "event capacity."
+                )
+            })
+
+        return attrs
+
+    @transaction.atomic
+    def create(self, validated_data):
+        ticket_types_data = validated_data.pop(
+            "ticket_types"
+        )
+
+        # Create the event, including its organizer.
+        event = Event.objects.create(**validated_data)
+
+        # Create all associated ticket tiers.
+        for ticket_data in ticket_types_data:
+            TicketType.objects.create(
+                event=event,
+                tier_name=ticket_data["tier_name"],
+                price=ticket_data["price"],
+                total_quantity=ticket_data["total_quantity"],
+                available_quantity=ticket_data["total_quantity"],
+            )
+
+        return event

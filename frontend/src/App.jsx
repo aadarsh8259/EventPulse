@@ -1,3 +1,4 @@
+import EventCreate from "./pages/EventCreate";
 import OrganizerDashboard from "./pages/OrganizerDashboard";
 import { Route, Routes } from "react-router";
 
@@ -32,10 +33,19 @@ function App() {
           path="/organizer/dashboard"
           element={<OrganizerDashboard />}
         />
+        <Route
+        path="/organizer/events/create"
+        element={<EventCreate />}
+        />
 
         <Route path="/login" element={<Login />} />
 
         <Route path="/register" element={<Register />} />
+
+        <Route
+        path="/organizer/events/create"
+        element={<EventCreate />}
+        />
       </Route>
     </Routes>
   );

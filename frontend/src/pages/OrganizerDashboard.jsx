@@ -1,4 +1,4 @@
-
+import { Link } from "react-router";
 import { useEffect, useState } from "react";
 import apiClient from "../api/client";
 
@@ -107,6 +107,12 @@ export default function OrganizerDashboard() {
             Track your revenue, ticket sales and upcoming events.
           </p>
         </div>
+        <Link
+        to="/organizer/events/create"
+        className="inline-flex items-center rounded-lg bg-blue-600 px-5 py-3 font-medium text-white hover:bg-blue-700"
+        >
+          Create New Event
+        </Link>
 
         {/* Loading state */}
         {loading && (
