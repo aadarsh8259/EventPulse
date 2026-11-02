@@ -146,7 +146,6 @@ class BookingSerializer(serializers.ModelSerializer):
             )
 
             ticket_type.available_quantity -= quantity
-
             ticket_type.save(
                 update_fields=["available_quantity"]
             )
@@ -223,7 +222,6 @@ class EventCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Event
-
         fields = (
             "id",
             "title",
@@ -234,7 +232,6 @@ class EventCreateSerializer(serializers.ModelSerializer):
             "category",
             "ticket_types",
         )
-
         read_only_fields = ("id",)
 
     def validate_date(self, value):
@@ -276,10 +273,8 @@ class EventCreateSerializer(serializers.ModelSerializer):
             "ticket_types"
         )
 
-        # Create the event, including its organizer.
         event = Event.objects.create(**validated_data)
 
-        # Create all associated ticket tiers.
         for ticket_data in ticket_types_data:
             TicketType.objects.create(
                 event=event,
@@ -290,3 +285,41 @@ class EventCreateSerializer(serializers.ModelSerializer):
             )
 
         return event
+
+
+class OrganizerAttendeeSerializer(serializers.ModelSerializer):
+    attendee_username = serializers.CharField(
+        source="user.username",
+        read_only=True
+    )
+
+    attendee_email = serializers.EmailField(
+        source="user.email",
+        read_only=True
+    )
+
+    ticket_tier = serializers.CharField(
+        source="ticket_type.tier_name",
+        read_only=True
+    )
+
+    ticket_price = serializers.DecimalField(
+        source="ticket_type.price",
+        max_digits=10,
+        decimal_places=2,
+        read_only=True
+    )
+
+    class Meta:
+        model = Booking
+        fields = (
+            "id",
+            "attendee_username",
+            "attendee_email",
+            "ticket_tier",
+            "ticket_price",
+            "quantity",
+            "total_amount",
+            "booking_status",
+            "booked_at",
+        )

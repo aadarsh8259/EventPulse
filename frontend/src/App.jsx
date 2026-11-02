@@ -1,5 +1,4 @@
-import EventCreate from "./pages/EventCreate";
-import OrganizerDashboard from "./pages/OrganizerDashboard";
+
 import { Route, Routes } from "react-router";
 
 import Layout from "./components/layout/Layout";
@@ -10,15 +9,27 @@ import EventDetails from "./pages/EventDetails";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import BookingConfirmation from "./pages/BookingConfirmation";
+import OrganizerDashboard from "./pages/OrganizerDashboard";
+import EventCreate from "./pages/EventCreate";
+import OrganizerAttendees from "./pages/OrganizerAttendees";
+
 
 function App() {
   return (
     <Routes>
-      
-      <Route element={<Layout />}>
-        <Route path="/" element={<Home />} />
 
-        <Route path="/events" element={<Events />} />
+      <Route element={<Layout />}>
+
+        {/* Public pages */}
+        <Route
+          path="/"
+          element={<Home />}
+        />
+
+        <Route
+          path="/events"
+          element={<Events />}
+        />
 
         <Route
           path="/events/:id"
@@ -26,27 +37,39 @@ function App() {
         />
 
         <Route
+          path="/login"
+          element={<Login />}
+        />
+
+        <Route
+          path="/register"
+          element={<Register />}
+        />
+
+        {/* Booking confirmation */}
+        <Route
           path="/booking-confirmation/:id"
           element={<BookingConfirmation />}
         />
+
+        {/* Organizer pages */}
         <Route
           path="/organizer/dashboard"
           element={<OrganizerDashboard />}
         />
-        <Route
-        path="/organizer/events/create"
-        element={<EventCreate />}
-        />
-
-        <Route path="/login" element={<Login />} />
-
-        <Route path="/register" element={<Register />} />
 
         <Route
-        path="/organizer/events/create"
-        element={<EventCreate />}
+          path="/organizer/events/create"
+          element={<EventCreate />}
         />
+
+        <Route
+          path="/organizer/events/:eventId/attendees"
+          element={<OrganizerAttendees />}
+        />
+
       </Route>
+
     </Routes>
   );
 }
