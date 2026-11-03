@@ -22,10 +22,12 @@ export default function OrganizerAttendees() {
   useEffect(() => {
     let cancelled = false;
 
-    setLoading(true);
-    setError("");
-
     const timer = setTimeout(async () => {
+      if (cancelled) return;
+
+      setLoading(true);
+      setError("");
+
       try {
         const response = await apiClient.get(
           `/organizer/events/${eventId}/attendees/`,
