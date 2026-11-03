@@ -4,7 +4,6 @@ import { Link } from "react-router";
 
 import apiClient from "../api/client";
 
-
 export default function OrganizerDashboard() {
   const [metrics, setMetrics] = useState({
     total_revenue: "0.00",
@@ -119,176 +118,196 @@ export default function OrganizerDashboard() {
   ];
 
   return (
-    <main className="min-h-screen bg-gray-50 px-4 py-10 sm:px-6 lg:px-8">
+    <main className="min-h-screen w-full bg-gray-50 px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
 
-      <div className="mx-auto max-w-7xl">
+      <div className="mx-auto w-full max-w-7xl min-w-0">
 
-        {/* Dashboard heading and create event button */}
-        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        {/* Dashboard Heading */}
+        <div className="mb-7 flex min-w-0 flex-col gap-5 sm:mb-8 sm:flex-row sm:items-end sm:justify-between">
 
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-wider text-blue-600">
+          <div className="min-w-0">
+
+            <p className="text-xs font-semibold uppercase tracking-wider text-blue-600 sm:text-sm">
               EventPulse Organizer
             </p>
 
-            <h1 className="mt-2 text-3xl font-bold text-gray-900 sm:text-4xl">
+            <h1 className="mt-2 break-words text-2xl font-bold leading-tight text-gray-900 sm:text-3xl lg:text-4xl">
               Dashboard Overview
             </h1>
 
-            <p className="mt-2 text-gray-600">
+            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-gray-600 sm:text-base">
               Track your revenue, ticket sales and upcoming events.
             </p>
+
           </div>
 
           <Link
             to="/organizer/events/create"
-            className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-5 py-3 font-medium text-white transition hover:bg-blue-700"
+            className="inline-flex min-h-12 w-full shrink-0 items-center justify-center rounded-xl bg-blue-600 px-5 py-3 text-center text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:w-auto sm:text-base"
           >
             + Create New Event
           </Link>
 
         </div>
 
-        {/* Loading state */}
+        {/* Loading State */}
         {loading && (
-          <div className="rounded-xl border border-gray-200 bg-white p-8 text-center">
-            <p className="text-gray-600">
+          <div className="rounded-2xl border border-gray-200 bg-white p-6 text-center shadow-sm sm:p-8">
+            <p className="text-sm text-gray-600 sm:text-base">
               Loading dashboard...
             </p>
           </div>
         )}
 
-        {/* Error state */}
+        {/* Error State */}
         {!loading && error && (
           <div
             role="alert"
-            className="rounded-xl border border-red-200 bg-red-50 p-5 text-red-700"
+            className="break-words rounded-xl border border-red-200 bg-red-50 p-4 text-sm leading-relaxed text-red-700 sm:p-5 sm:text-base"
           >
             {error}
           </div>
         )}
 
-        {/* Dashboard content */}
+        {/* Dashboard Content */}
         {!loading && !error && (
           <>
 
-            {/* Summary cards */}
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {/* Summary Cards */}
+            <section
+              aria-label="Dashboard statistics"
+              className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3 lg:gap-6"
+            >
 
               {cards.map((card) => (
                 <article
                   key={card.title}
-                  className={`rounded-2xl border border-gray-200 border-l-4 ${card.color} bg-white p-6 shadow-sm transition hover:shadow-md`}
+                  className={`min-w-0 rounded-2xl border border-gray-200 border-l-4 ${card.color} bg-white p-5 shadow-sm transition duration-200 hover:shadow-md sm:p-6`}
                 >
-                  <div className="flex items-center justify-between">
 
-                    <p className="text-sm font-medium text-gray-500">
+                  <div className="flex min-w-0 items-center justify-between gap-3">
+
+                    <p className="min-w-0 break-words text-sm font-medium text-gray-500 sm:text-base">
                       {card.title}
                     </p>
 
                     <span
-                      className={`flex h-11 w-11 items-center justify-center rounded-xl text-lg font-bold ${card.iconColor}`}
+                      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-lg font-bold sm:h-11 sm:w-11 ${card.iconColor}`}
                     >
                       {card.icon}
                     </span>
 
                   </div>
 
-                  <h2 className="mt-5 text-3xl font-bold text-gray-900">
+                  <h2 className="mt-5 break-words text-2xl font-bold leading-tight text-gray-900 sm:text-3xl">
                     {card.value}
                   </h2>
 
-                  <p className="mt-2 text-sm text-gray-500">
+                  <p className="mt-2 text-xs leading-relaxed text-gray-500 sm:text-sm">
                     {card.description}
                   </p>
+
                 </article>
               ))}
 
-            </div>
+            </section>
 
             {/* My Events */}
-            <section className="mt-10">
+            <section className="mt-8 min-w-0 sm:mt-10">
 
-              <div className="mb-5 flex items-center justify-between">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900">
+              {/* Events Heading */}
+              <div className="mb-5 flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+
+                <div className="min-w-0">
+
+                  <h2 className="break-words text-xl font-bold text-gray-900 sm:text-2xl">
                     My Events
                   </h2>
 
-                  <p className="mt-1 text-sm text-gray-500">
+                  <p className="mt-1 text-sm leading-relaxed text-gray-500">
                     Manage your events and their registered attendees.
                   </p>
+
                 </div>
 
-                <span className="rounded-full bg-blue-100 px-3 py-1 text-sm font-semibold text-blue-700">
+                <span className="inline-flex w-fit shrink-0 items-center rounded-full bg-blue-100 px-3 py-1.5 text-xs font-semibold text-blue-700 sm:text-sm">
                   {events.length} Events
                 </span>
+
               </div>
 
+              {/* Empty Events State */}
               {events.length === 0 ? (
-                <div className="rounded-2xl border border-gray-200 bg-white p-10 text-center shadow-sm">
 
-                  <h3 className="text-lg font-semibold text-gray-900">
+                <div className="rounded-2xl border border-gray-200 bg-white px-5 py-10 text-center shadow-sm sm:px-8 sm:py-12">
+
+                  <h3 className="text-lg font-semibold text-gray-900 sm:text-xl">
                     No events created yet
                   </h3>
 
-                  <p className="mt-2 text-gray-500">
+                  <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-gray-500 sm:text-base">
                     Create your first event to start managing attendees.
                   </p>
 
                   <Link
                     to="/organizer/events/create"
-                    className="mt-5 inline-flex rounded-lg bg-blue-600 px-5 py-3 font-medium text-white hover:bg-blue-700"
+                    className="mt-5 inline-flex min-h-12 w-full max-w-xs items-center justify-center rounded-xl bg-blue-600 px-5 py-3 text-center text-sm font-semibold text-white transition hover:bg-blue-700 sm:w-auto"
                   >
                     Create Your First Event
                   </Link>
 
                 </div>
+
               ) : (
 
-                <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                /* Event Cards */
+                <div className="grid min-w-0 grid-cols-1 gap-4 sm:gap-5 lg:grid-cols-2 lg:gap-6">
 
                   {events.map((event) => (
                     <article
                       key={event.id}
-                      className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition hover:shadow-md"
+                      className="flex min-w-0 flex-col rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition duration-200 hover:shadow-md sm:p-6"
                     >
 
-                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      {/* Event Header */}
+                      <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
 
-                        <div>
-                          <h3 className="text-xl font-bold text-gray-900">
+                        <div className="min-w-0">
+
+                          <h3 className="break-words text-lg font-bold leading-snug text-gray-900 sm:text-xl">
                             {event.title}
                           </h3>
 
-                          <span className="mt-2 inline-block rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+                          <span className="mt-2 inline-flex max-w-full items-center break-words rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
                             {event.category || "Other"}
                           </span>
+
                         </div>
 
-                        <span className="text-sm font-medium text-gray-500">
+                        <span className="w-fit shrink-0 break-words text-xs font-medium text-gray-500 sm:text-sm">
                           Event #{event.id}
                         </span>
 
                       </div>
 
-                      <div className="mt-5 space-y-2 text-sm text-gray-600">
+                      {/* Event Information */}
+                      <div className="mt-5 min-w-0 space-y-3 text-sm text-gray-600">
 
-                        <p>
+                        <p className="min-w-0 break-words leading-relaxed">
                           <span className="font-semibold text-gray-800">
                             Date:
                           </span>{" "}
                           {formatDate(event.date)}
                         </p>
 
-                        <p>
+                        <p className="min-w-0 break-words leading-relaxed">
                           <span className="font-semibold text-gray-800">
                             Venue:
                           </span>{" "}
                           {event.location}
                         </p>
 
-                        <p>
+                        <p className="min-w-0 break-words leading-relaxed">
                           <span className="font-semibold text-gray-800">
                             Capacity:
                           </span>{" "}
@@ -297,18 +316,19 @@ export default function OrganizerDashboard() {
 
                       </div>
 
-                      <div className="mt-6 flex flex-wrap gap-3">
+                      {/* Event Action Buttons */}
+                      <div className="mt-6 flex flex-col gap-3 border-t border-gray-100 pt-5 sm:flex-row sm:flex-wrap">
 
                         <Link
                           to={`/organizer/events/${event.id}/attendees`}
-                          className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2.5 font-medium text-white transition hover:bg-blue-700"
+                          className="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-blue-600 px-4 py-2.5 text-center text-sm font-semibold text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:w-auto"
                         >
                           Manage Attendees
                         </Link>
 
                         <Link
                           to={`/events/${event.id}`}
-                          className="inline-flex items-center justify-center rounded-lg border border-gray-300 px-4 py-2.5 font-medium text-gray-700 transition hover:bg-gray-50"
+                          className="inline-flex min-h-11 w-full items-center justify-center rounded-xl border border-gray-300 px-4 py-2.5 text-center text-sm font-semibold text-gray-700 transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 sm:w-auto"
                         >
                           View Event
                         </Link>
@@ -319,18 +339,19 @@ export default function OrganizerDashboard() {
                   ))}
 
                 </div>
+
               )}
 
             </section>
 
-            {/* Welcome section */}
-            <section className="mt-8 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+            {/* Welcome Section */}
+            <section className="mt-7 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm sm:mt-8 sm:p-6">
 
-              <h2 className="text-xl font-semibold text-gray-900">
+              <h2 className="break-words text-lg font-semibold text-gray-900 sm:text-xl">
                 Welcome to your Organizer Portal
               </h2>
 
-              <p className="mt-2 leading-7 text-gray-600">
+              <p className="mt-2 text-sm leading-7 text-gray-600 sm:text-base">
                 Monitor your event performance from one place.
                 View attendee bookings, search registered users
                 and export your attendee records.
@@ -342,6 +363,7 @@ export default function OrganizerDashboard() {
         )}
 
       </div>
+
     </main>
   );
 }

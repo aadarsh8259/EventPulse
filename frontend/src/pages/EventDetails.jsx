@@ -1,84 +1,31 @@
-import TicketSelectionModal from "../components/events/TicketSelectionModal";
+
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
+
+import TicketSelectionModal from "../components/events/TicketSelectionModal";
 import apiClient from "../api/client";
 
 export default function EventDetails() {
   const { id } = useParams();
+  const navigate = useNavigate();
 
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
   const [showTicketModal, setShowTicketModal] = useState(false);
-  const [selectedTickets, setSelectedTickets] = useState([]);
+  const [bookingLoading, setBookingLoading] = useState(false);
+  const [selectionMessage, setSelectionMessage] = useState("");
 
-  const navigate = useNavigate();
-
-const [bookingLoading, setBookingLoading] = useState(false);
-const [selectionMessage, setSelectionMessage] = useState("");
-  
-  // Fetch details for the selected event
-
-  const handleConfirmSelection = async (selection) => {
-  if (bookingLoading) return;
-
-  if (!selection.length) {
-    return;
-  }
-
-  // Current backend supports one ticket tier per booking.
-  if (selection.length !== 1) {
-    setSelectionMessage(
-      "Please select one ticket tier per booking."
-    );
-    return;
-  }
-
-  const ticket = selection[0];
-
-  try {
-    setBookingLoading(true);
-    setSelectionMessage("");
-
-    // Send checkout request to Django
-    const response = await apiClient.post("/bookings/", {
-      ticket_type: ticket.id,
-      quantity: ticket.quantity,
-    });
-
-    const booking = response.data;
-
-    if (!booking.id) {
-      throw new Error("The server did not return a booking ID.");
-    }
-
-    // Navigate to digital booking pass
-    navigate(`/booking-confirmation/${booking.id}`);
-
-  } catch (error) {
-    const data = error.response?.data;
-
-    const message =
-      data?.quantity?.[0] ||
-      data?.ticket_type?.[0] ||
-      data?.detail ||
-      error.message ||
-      "Booking failed. Please try again.";
-
-    setSelectionMessage(message);
-
-  } finally {
-    setBookingLoading(false);
-  }
-};
+  // Fetch event details.
   useEffect(() => {
     let cancelled = false;
 
     const fetchEvent = async () => {
-      setLoading(true);
-      setError("");
-
       try {
+        setLoading(true);
+        setError("");
+
         const response = await apiClient.get(`/events/${id}/`);
 
         if (!cancelled) {
@@ -89,7 +36,9 @@ const [selectionMessage, setSelectionMessage] = useState("");
           if (err.response?.status === 404) {
             setError("Event not found.");
           } else {
-            setError("Unable to load event details. Please try again.");
+            setError(
+              "Unable to load event details. Please try again."
+            );
           }
         }
       } finally {
@@ -106,26 +55,93 @@ const [selectionMessage, setSelectionMessage] = useState("");
     };
   }, [id]);
 
-  // Loading state
+  // Handle booking confirmation.
+  const handleConfirmSelection = async (selection) => {
+    if (bookingLoading) return;
+
+    if (!selection || !selection.length) {
+      return;
+    }
+
+    // Backend currently supports one ticket tier per booking.
+    if (selection.length !== 1) {
+      setSelectionMessage(
+        "Please select one ticket tier per booking."
+      );
+      return;
+    }
+
+    const ticket = selection[0];
+
+    try {
+      setBookingLoading(true);
+      setSelectionMessage("");
+
+      // Send booking request to Django.
+      const response = await apiClient.post("/bookings/", {
+        ticket_type: ticket.id,
+        quantity: ticket.quantity,
+      });
+
+      const booking = response.data;
+
+      if (!booking.id) {
+        throw new Error(
+          "The server did not return a booking ID."
+        );
+      }
+
+      // Navigate to booking confirmation.
+      navigate(`/booking-confirmation/${booking.id}`);
+
+    } catch (err) {
+      const data = err.response?.data;
+
+      const message =
+        data?.quantity?.[0] ||
+        data?.ticket_type?.[0] ||
+        data?.detail ||
+        err.message ||
+        "Booking failed. Please try again.";
+
+      setSelectionMessage(
+        typeof message === "string"
+          ? message
+          : "Booking failed. Please try again."
+      );
+
+    } finally {
+      setBookingLoading(false);
+    }
+  };
+
+  // Loading state.
   if (loading) {
     return (
-      <main className="flex min-h-[60vh] items-center justify-center bg-gray-50">
-        <p className="text-gray-600">Loading event details...</p>
+      <main className="flex min-h-[60vh] w-full items-center justify-center bg-gray-50 px-4">
+        <p className="text-center text-sm text-gray-600 sm:text-base">
+          Loading event details...
+        </p>
       </main>
     );
   }
 
-  // Error state
+  // Error state.
   if (error) {
     return (
-      <main className="min-h-[60vh] bg-gray-50 px-4 py-12 text-center">
-        <h1 className="text-2xl font-bold text-gray-900">{error}</h1>
+      <main className="flex min-h-[60vh] w-full flex-col items-center justify-center bg-gray-50 px-4 py-12 text-center">
+
+        <h1 className="break-words text-2xl font-bold text-gray-900 sm:text-3xl">
+          {error}
+        </h1>
+
         <Link
           to="/events"
-          className="mt-5 inline-block rounded-lg bg-blue-600 px-5 py-3 text-white hover:bg-blue-700"
+          className="mt-5 inline-flex min-h-11 items-center justify-center rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700"
         >
           Back to Events
         </Link>
+
       </main>
     );
   }
@@ -134,6 +150,7 @@ const [selectionMessage, setSelectionMessage] = useState("");
     return null;
   }
 
+  // Format event date and time.
   const eventDate = new Date(event.date);
   const validDate = !Number.isNaN(eventDate.getTime());
 
@@ -156,149 +173,156 @@ const [selectionMessage, setSelectionMessage] = useState("");
   const ticketTypes = event.ticket_types ?? [];
 
   return (
-    <main className="min-h-screen bg-gray-50 px-4 py-10 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-5xl">
+    <main className="min-h-screen w-full bg-gray-50 px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+
+      <div className="mx-auto w-full max-w-5xl">
+
+        {/* Back navigation */}
         <Link
           to="/events"
-          className="text-sm font-medium text-blue-600 hover:underline"
+          className="inline-flex min-h-10 items-center text-sm font-medium text-blue-600 transition hover:text-blue-800 hover:underline"
         >
           ← Back to Events
         </Link>
 
-        {/* Event heading */}
-        <section className="mt-6 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-          <div className="bg-gradient-to-r from-blue-600 to-indigo-700 px-6 py-10 text-white sm:px-8">
-            <span className="rounded-full bg-white/20 px-3 py-1 text-sm">
+        {/* Event heading and basic information */}
+        <section className="mt-5 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+
+          {/* Event banner */}
+          <div className="bg-gradient-to-r from-blue-600 to-indigo-700 px-5 py-8 text-white sm:px-8 sm:py-10 lg:px-10">
+
+            <span className="inline-block max-w-full break-words rounded-full bg-white/20 px-3 py-1 text-xs font-medium sm:text-sm">
               {event.category || "Other"}
             </span>
 
-            <h1 className="mt-5 text-3xl font-bold sm:text-4xl">
+            <h1 className="mt-5 break-words text-2xl font-bold leading-tight sm:text-3xl md:text-4xl lg:text-5xl">
               {event.title}
             </h1>
 
-            <p className="mt-3 text-blue-100">
+            <p className="mt-3 break-words text-sm leading-relaxed text-blue-100 sm:text-base">
               {event.location}
             </p>
+
           </div>
 
-          {/* Date, time and venue */}
-          <div className="grid gap-6 p-6 sm:grid-cols-2 sm:p-8">
-            <div>
-              <p className="text-sm font-medium text-gray-500">
+          {/* Date, time, venue and capacity */}
+          <div className="grid grid-cols-1 gap-5 p-5 sm:grid-cols-2 sm:gap-6 sm:p-8">
+
+            <div className="min-w-0">
+              <p className="text-xs font-semibold tracking-wider text-gray-500 sm:text-sm">
                 DATE
               </p>
-              <p className="mt-2 font-semibold text-gray-900">
+
+              <p className="mt-2 break-words text-sm font-semibold text-gray-900 sm:text-base">
                 {formattedDate}
               </p>
             </div>
 
-            <div>
-              <p className="text-sm font-medium text-gray-500">
+            <div className="min-w-0">
+              <p className="text-xs font-semibold tracking-wider text-gray-500 sm:text-sm">
                 TIME
               </p>
-              <p className="mt-2 font-semibold text-gray-900">
+
+              <p className="mt-2 break-words text-sm font-semibold text-gray-900 sm:text-base">
                 {formattedTime || "Time unavailable"}
               </p>
             </div>
 
-            <div>
-              <p className="text-sm font-medium text-gray-500">
+            <div className="min-w-0">
+              <p className="text-xs font-semibold tracking-wider text-gray-500 sm:text-sm">
                 VENUE
               </p>
-              <p className="mt-2 font-semibold text-gray-900">
+
+              <p className="mt-2 break-words text-sm font-semibold text-gray-900 sm:text-base">
                 {event.location}
               </p>
             </div>
 
-            <div>
-              <p className="text-sm font-medium text-gray-500">
+            <div className="min-w-0">
+              <p className="text-xs font-semibold tracking-wider text-gray-500 sm:text-sm">
                 EVENT CAPACITY
               </p>
-              <p className="mt-2 font-semibold text-gray-900">
+
+              <p className="mt-2 text-sm font-semibold text-gray-900 sm:text-base">
                 {event.capacity}
               </p>
             </div>
+
           </div>
+
         </section>
 
-        {selectionMessage && (
-  <div
-    role="status"
-    className="mt-5 rounded-xl border border-blue-200 bg-blue-50 p-4"
-  >
-    <p className="font-medium text-blue-900">
-      {selectionMessage}
-    </p>
+        {/* Event description */}
+        <section className="mt-6 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm sm:mt-8 sm:p-8">
 
-    <ul className="mt-3 space-y-2 text-sm text-blue-900">
-      {selectedTickets.map((ticket) => (
-        <li key={ticket.id}>
-          {ticket.tier_name} × {ticket.quantity} —{" "}
-          {new Intl.NumberFormat("en-IN", {
-            style: "currency",
-            currency: "INR",
-          }).format(ticket.line_subtotal)}
-        </li>
-      ))}
-    </ul>
-  </div>
-)}
-
-        {/* Full description */}
-        <section className="mt-8 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8">
-          <h2 className="text-2xl font-bold text-gray-900">
+          <h2 className="text-xl font-bold text-gray-900 sm:text-2xl">
             About This Event
           </h2>
 
-          <p className="mt-4 whitespace-pre-line leading-7 text-gray-600">
+          <p className="mt-4 break-words whitespace-pre-line text-sm leading-7 text-gray-600 sm:text-base">
             {event.description || "No description available."}
           </p>
+
         </section>
 
         {/* Ticket tiers */}
+        <section className="mt-7 sm:mt-8">
 
-   
-        <section className="mt-8">
-          <h2 className="text-2xl font-bold text-gray-900">
-            Available Ticket Tiers
-          </h2>
+          {/* Section heading and button */}
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
 
-          <p className="mt-2 text-gray-600">
-            Compare ticket prices and availability.
-          </p>
+            <div className="min-w-0">
+              <h2 className="text-xl font-bold text-gray-900 sm:text-2xl">
+                Available Ticket Tiers
+              </h2>
 
-           <button
-    type="button"
-    onClick={() => {
-      setSelectionMessage("");
-      setShowTicketModal(true);
-    }}
-    disabled={ticketTypes.length === 0}
-    className="mt-5 rounded-lg bg-blue-600 px-5 py-3 font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-  >
-    Select Tickets
-  </button>
+              <p className="mt-2 text-sm text-gray-600 sm:text-base">
+                Compare ticket prices and availability.
+              </p>
+            </div>
 
+            <button
+              type="button"
+              onClick={() => {
+                setSelectionMessage("");
+                setShowTicketModal(true);
+              }}
+              disabled={ticketTypes.length === 0}
+              className="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:shrink-0"
+            >
+              Select Tickets
+            </button>
+
+          </div>
+
+          {/* No tickets available */}
           {ticketTypes.length === 0 ? (
-            <div className="mt-5 rounded-xl border border-gray-200 bg-white p-6 text-gray-600">
+
+            <div className="mt-5 rounded-xl border border-gray-200 bg-white p-5 text-sm text-gray-600 sm:p-6 sm:text-base">
               No ticket tiers are currently available for this event.
             </div>
+
           ) : (
-            <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+
+            /* Responsive ticket cards */
+            <div className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+
               {ticketTypes.map((ticket) => {
+
                 const available = Number(ticket.available_quantity);
                 const soldOut = available <= 0;
 
                 return (
                   <article
                     key={ticket.id}
-                    className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
+                    className="flex min-w-0 flex-col rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition duration-200 hover:shadow-md sm:p-6"
                   >
-                    <h3 className="text-xl font-bold text-gray-900">
+
+                    <h3 className="break-words text-lg font-bold text-gray-900 sm:text-xl">
                       {ticket.tier_name}
                     </h3>
 
-                    <p className="mt-4 text-3xl font-bold text-blue-600">
+                    <p className="mt-4 break-words text-2xl font-bold text-blue-600 sm:text-3xl">
                       ₹
                       {Number(ticket.price).toLocaleString("en-IN", {
                         minimumFractionDigits: 2,
@@ -306,38 +330,58 @@ const [selectionMessage, setSelectionMessage] = useState("");
                       })}
                     </p>
 
-                    <p className="mt-4 text-sm text-gray-600">
-                      Total tickets: {ticket.total_quantity}
-                    </p>
+                    <div className="mt-5 space-y-2 text-sm text-gray-600">
 
-                    <p className="mt-1 text-sm text-gray-600">
-                      Available: {ticket.available_quantity}
-                    </p>
+                      <p>
+                        Total tickets: {ticket.total_quantity}
+                      </p>
 
-                    <p
-                      className={`mt-4 inline-block rounded-full px-3 py-1 text-sm font-medium ${
-                        soldOut
-                          ? "bg-red-100 text-red-700"
-                          : "bg-green-100 text-green-700"
-                      }`}
-                    >
-                      {soldOut ? "Sold Out" : "Available"}
-                    </p>
+                      <p>
+                        Available: {ticket.available_quantity}
+                      </p>
+
+                    </div>
+
+                    <div className="mt-auto pt-5">
+                      <span
+                        className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold sm:text-sm ${
+                          soldOut
+                            ? "bg-red-100 text-red-700"
+                            : "bg-green-100 text-green-700"
+                        }`}
+                      >
+                        {soldOut ? "Sold Out" : "Available"}
+                      </span>
+                    </div>
+
                   </article>
                 );
               })}
+
             </div>
+
           )}
+
         </section>
+
       </div>
 
+      {/* Ticket selection modal */}
       {showTicketModal && (
-  <TicketSelectionModal
-    ticketTypes={ticketTypes}
-    onClose={() => setShowTicketModal(false)}
-    onConfirm={handleConfirmSelection}
-  />
-)}
+        <TicketSelectionModal
+          ticketTypes={ticketTypes}
+          onClose={() => {
+            if (!bookingLoading) {
+              setShowTicketModal(false);
+              setSelectionMessage("");
+            }
+          }}
+          onConfirm={handleConfirmSelection}
+          isSubmitting={bookingLoading}
+          errorMessage={selectionMessage}
+        />
+      )}
+
     </main>
   );
 }

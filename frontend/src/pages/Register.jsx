@@ -1,5 +1,7 @@
+
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
+
 import { useToast } from "../context/ToastContext";
 import { registerUser } from "../api/auth";
 
@@ -17,6 +19,7 @@ export default function Register() {
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Update input values.
   const handleChange = (event) => {
     const { name, value } = event.target;
 
@@ -32,6 +35,7 @@ export default function Register() {
     }));
   };
 
+  // Validate registration form.
   const validate = () => {
     const newErrors = {};
 
@@ -41,7 +45,9 @@ export default function Register() {
 
     if (!formData.email.trim()) {
       newErrors.email = "Email is required.";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+    } else if (
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())
+    ) {
       newErrors.email = "Enter a valid email address.";
     }
 
@@ -60,8 +66,11 @@ export default function Register() {
     return newErrors;
   };
 
+  // Handle registration.
   const handleSubmit = async (event) => {
     event.preventDefault();
+
+    if (isSubmitting) return;
 
     const validationErrors = validate();
 
@@ -71,6 +80,7 @@ export default function Register() {
     }
 
     setIsSubmitting(true);
+    setErrors({});
 
     try {
       await registerUser({
@@ -79,10 +89,19 @@ export default function Register() {
         password: formData.password,
       });
 
-      showToast("Registration successful! Please login.", "success");
+      showToast(
+        "Registration successful! Please login.",
+        "success"
+      );
 
       navigate("/login");
+
     } catch (error) {
+      console.error(
+        "Registration error:",
+        error.response?.data || error.message
+      );
+
       const backendErrors = error.response?.data;
 
       let message = "Registration failed. Please try again.";
@@ -91,8 +110,12 @@ export default function Register() {
         message = backendErrors.username[0];
       } else if (backendErrors?.email) {
         message = backendErrors.email[0];
+      } else if (backendErrors?.password) {
+        message = backendErrors.password[0];
       } else if (backendErrors?.detail) {
         message = backendErrors.detail;
+      } else if (error.message) {
+        message = error.message;
       }
 
       setErrors({
@@ -100,32 +123,44 @@ export default function Register() {
       });
 
       showToast(message, "error");
+
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="flex min-h-[calc(100vh-140px)] items-center justify-center bg-gray-50 px-4 py-10">
-      <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-lg sm:p-8">
+    <main className="flex min-h-[calc(100vh-140px)] w-full items-center justify-center bg-gray-50 px-4 py-8 sm:px-6 sm:py-12">
 
-        <div className="mb-6 text-center">
-          <h1 className="text-3xl font-bold text-gray-900">
+      {/* Registration Card */}
+      <div className="mx-auto w-full max-w-md rounded-2xl border border-gray-200 bg-white p-5 shadow-lg sm:rounded-3xl sm:p-8 lg:p-10">
+
+        {/* Heading */}
+        <div className="mb-7 text-center sm:mb-8">
+
+          <h1 className="break-words text-3xl font-bold leading-tight text-gray-900 sm:text-4xl">
             Create Account
           </h1>
 
-          <p className="mt-2 text-sm text-gray-600">
+          <p className="mt-3 text-sm leading-relaxed text-gray-600 sm:text-base">
             Register for your EventPulse account.
           </p>
+
         </div>
 
-        <form onSubmit={handleSubmit} noValidate className="space-y-5">
+        {/* Registration Form */}
+        <form
+          onSubmit={handleSubmit}
+          noValidate
+          className="space-y-5 sm:space-y-6"
+        >
 
           {/* Username */}
-          <div>
+          <div className="min-w-0">
+
             <label
               htmlFor="username"
-              className="mb-1 block text-sm font-medium text-gray-700"
+              className="mb-2 block text-sm font-semibold text-gray-800"
             >
               Username
             </label>
@@ -138,25 +173,35 @@ export default function Register() {
               onChange={handleChange}
               placeholder="Enter your username"
               autoComplete="username"
-              className={`w-full rounded-lg border px-3 py-2 outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100 ${
+              required
+              aria-invalid={Boolean(errors.username)}
+              aria-describedby={
+                errors.username ? "username-error" : undefined
+              }
+              className={`min-h-12 w-full min-w-0 rounded-xl border bg-white px-4 py-3 text-base text-gray-900 outline-none transition focus:ring-2 focus:ring-blue-100 ${
                 errors.username
-                  ? "border-red-500"
-                  : "border-gray-300"
+                  ? "border-red-500 focus:border-red-500"
+                  : "border-gray-300 focus:border-blue-600"
               }`}
             />
 
             {errors.username && (
-              <p className="mt-1 text-sm text-red-600">
+              <p
+                id="username-error"
+                className="mt-2 break-words text-sm text-red-600"
+              >
                 {errors.username}
               </p>
             )}
+
           </div>
 
           {/* Email */}
-          <div>
+          <div className="min-w-0">
+
             <label
               htmlFor="email"
-              className="mb-1 block text-sm font-medium text-gray-700"
+              className="mb-2 block text-sm font-semibold text-gray-800"
             >
               Email
             </label>
@@ -169,25 +214,36 @@ export default function Register() {
               onChange={handleChange}
               placeholder="Enter your email"
               autoComplete="email"
-              className={`w-full rounded-lg border px-3 py-2 outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100 ${
+              inputMode="email"
+              required
+              aria-invalid={Boolean(errors.email)}
+              aria-describedby={
+                errors.email ? "email-error" : undefined
+              }
+              className={`min-h-12 w-full min-w-0 rounded-xl border bg-white px-4 py-3 text-base text-gray-900 outline-none transition focus:ring-2 focus:ring-blue-100 ${
                 errors.email
-                  ? "border-red-500"
-                  : "border-gray-300"
+                  ? "border-red-500 focus:border-red-500"
+                  : "border-gray-300 focus:border-blue-600"
               }`}
             />
 
             {errors.email && (
-              <p className="mt-1 text-sm text-red-600">
+              <p
+                id="email-error"
+                className="mt-2 break-words text-sm text-red-600"
+              >
                 {errors.email}
               </p>
             )}
+
           </div>
 
           {/* Password */}
-          <div>
+          <div className="min-w-0">
+
             <label
               htmlFor="password"
-              className="mb-1 block text-sm font-medium text-gray-700"
+              className="mb-2 block text-sm font-semibold text-gray-800"
             >
               Password
             </label>
@@ -200,25 +256,35 @@ export default function Register() {
               onChange={handleChange}
               placeholder="Minimum 8 characters"
               autoComplete="new-password"
-              className={`w-full rounded-lg border px-3 py-2 outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100 ${
+              required
+              aria-invalid={Boolean(errors.password)}
+              aria-describedby={
+                errors.password ? "password-error" : undefined
+              }
+              className={`min-h-12 w-full min-w-0 rounded-xl border bg-white px-4 py-3 text-base text-gray-900 outline-none transition focus:ring-2 focus:ring-blue-100 ${
                 errors.password
-                  ? "border-red-500"
-                  : "border-gray-300"
+                  ? "border-red-500 focus:border-red-500"
+                  : "border-gray-300 focus:border-blue-600"
               }`}
             />
 
             {errors.password && (
-              <p className="mt-1 text-sm text-red-600">
+              <p
+                id="password-error"
+                className="mt-2 break-words text-sm text-red-600"
+              >
                 {errors.password}
               </p>
             )}
+
           </div>
 
           {/* Confirm Password */}
-          <div>
+          <div className="min-w-0">
+
             <label
               htmlFor="confirmPassword"
-              className="mb-1 block text-sm font-medium text-gray-700"
+              className="mb-2 block text-sm font-semibold text-gray-800"
             >
               Confirm Password
             </label>
@@ -231,26 +297,39 @@ export default function Register() {
               onChange={handleChange}
               placeholder="Re-enter your password"
               autoComplete="new-password"
-              className={`w-full rounded-lg border px-3 py-2 outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100 ${
+              required
+              aria-invalid={Boolean(errors.confirmPassword)}
+              aria-describedby={
                 errors.confirmPassword
-                  ? "border-red-500"
-                  : "border-gray-300"
+                  ? "confirm-password-error"
+                  : undefined
+              }
+              className={`min-h-12 w-full min-w-0 rounded-xl border bg-white px-4 py-3 text-base text-gray-900 outline-none transition focus:ring-2 focus:ring-blue-100 ${
+                errors.confirmPassword
+                  ? "border-red-500 focus:border-red-500"
+                  : "border-gray-300 focus:border-blue-600"
               }`}
             />
 
             {errors.confirmPassword && (
-              <p className="mt-1 text-sm text-red-600">
+              <p
+                id="confirm-password-error"
+                className="mt-2 break-words text-sm text-red-600"
+              >
                 {errors.confirmPassword}
               </p>
             )}
+
           </div>
 
-          {/* Submit Error */}
+          {/* General Submit Error */}
           {errors.submit && (
-            <div className="rounded-lg border border-red-200 bg-red-50 p-3">
-              <p className="text-sm text-red-600">
-                {errors.submit}
-              </p>
+            <div
+              role="alert"
+              aria-live="polite"
+              className="break-words rounded-xl border border-red-200 bg-red-50 p-3 text-sm leading-relaxed text-red-600 sm:p-4"
+            >
+              {errors.submit}
             </div>
           )}
 
@@ -258,22 +337,27 @@ export default function Register() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full rounded-lg bg-blue-600 px-4 py-2.5 font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+            className="flex min-h-12 w-full items-center justify-center rounded-xl bg-blue-600 px-5 py-3 text-base font-semibold text-white shadow-sm transition duration-200 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isSubmitting ? "Creating Account..." : "Create Account"}
           </button>
+
         </form>
 
-        <p className="mt-6 text-center text-sm text-gray-600">
+        {/* Login Link */}
+        <p className="mt-7 break-words text-center text-sm leading-relaxed text-gray-600 sm:mt-8 sm:text-base">
           Already have an account?{" "}
+
           <Link
             to="/login"
-            className="font-medium text-blue-600 hover:underline"
+            className="font-semibold text-blue-600 transition hover:text-blue-800 hover:underline"
           >
             Login
           </Link>
         </p>
+
       </div>
-    </div>
+
+    </main>
   );
 }

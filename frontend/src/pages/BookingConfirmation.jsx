@@ -10,6 +10,7 @@ export default function BookingConfirmation() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  // Fetch booking information.
   useEffect(() => {
     let cancelled = false;
 
@@ -47,6 +48,7 @@ export default function BookingConfirmation() {
     };
   }, [id]);
 
+  // Format currency.
   const formatMoney = (amount) =>
     new Intl.NumberFormat("en-IN", {
       style: "currency",
@@ -54,6 +56,7 @@ export default function BookingConfirmation() {
       minimumFractionDigits: 2,
     }).format(Number(amount) || 0);
 
+  // Format event and booking dates.
   const formatDate = (date) => {
     if (!date) return "Not available";
 
@@ -73,29 +76,33 @@ export default function BookingConfirmation() {
     });
   };
 
+  // Loading State.
   if (loading) {
     return (
-      <main className="flex min-h-[60vh] items-center justify-center bg-gray-50">
-        <p className="text-gray-600">
+      <main className="flex min-h-[60vh] w-full items-center justify-center bg-gray-50 px-4 py-10">
+        <p className="text-center text-sm text-gray-600 sm:text-base">
           Loading your booking pass...
         </p>
       </main>
     );
   }
 
+  // Error State.
   if (error) {
     return (
-      <main className="min-h-[60vh] bg-gray-50 px-4 py-12 text-center">
-        <h1 className="text-2xl font-bold text-gray-900">
+      <main className="flex min-h-[60vh] w-full flex-col items-center justify-center bg-gray-50 px-4 py-12 text-center">
+
+        <h1 className="max-w-lg break-words text-2xl font-bold text-gray-900 sm:text-3xl">
           {error}
         </h1>
 
         <Link
           to="/events"
-          className="mt-5 inline-block rounded-lg bg-blue-600 px-5 py-3 text-white hover:bg-blue-700"
+          className="mt-5 inline-flex min-h-12 w-full max-w-xs items-center justify-center rounded-xl bg-blue-600 px-5 py-3 text-center font-semibold text-white transition hover:bg-blue-700"
         >
           Browse Events
         </Link>
+
       </main>
     );
   }
@@ -108,58 +115,75 @@ export default function BookingConfirmation() {
     booking.booking_status?.toUpperCase() === "CONFIRMED";
 
   return (
-    <main className="min-h-screen bg-gray-50 px-4 py-12 sm:px-6">
-      <div className="mx-auto max-w-2xl">
+    <main className="min-h-screen w-full bg-gray-50 px-4 py-7 sm:px-6 sm:py-10 lg:py-12 print:min-h-0 print:bg-white print:p-0">
 
-        <div className="mb-8 text-center">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100 text-3xl text-green-600">
+      <div className="mx-auto w-full max-w-2xl min-w-0">
+
+        {/* Confirmation Heading */}
+        <div className="mb-7 text-center sm:mb-8 print:hidden">
+
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-green-100 text-3xl font-bold text-green-600 sm:h-16 sm:w-16">
             ✓
           </div>
 
-          <h1 className="mt-4 text-3xl font-bold text-gray-900">
+          <h1 className="mt-4 break-words text-2xl font-bold text-gray-900 sm:text-3xl">
             Booking Confirmed!
           </h1>
 
-          <p className="mt-2 text-gray-600">
+          <p className="mx-auto mt-2 max-w-lg text-sm leading-relaxed text-gray-600 sm:text-base">
             Your EventPulse booking has been successfully created.
           </p>
+
         </div>
 
-        <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-lg">
+        {/* Digital Booking Pass */}
+        <section className="min-w-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-lg print:rounded-none print:border print:shadow-none">
 
-          <div className="bg-gradient-to-r from-blue-600 to-indigo-700 p-6 text-white sm:p-8">
-            <div className="flex items-center justify-between gap-3">
-              <h2 className="text-xl font-bold">
+          {/* Pass Header */}
+          <div className="bg-gradient-to-r from-blue-600 to-indigo-700 p-5 text-white sm:p-8 print:bg-blue-700">
+
+            <div className="flex min-w-0 items-center justify-between gap-3">
+
+              <h2 className="text-lg font-bold sm:text-xl">
                 EventPulse
               </h2>
 
-              <span className="rounded-full bg-white/20 px-3 py-1 text-xs font-semibold">
+              <span className="shrink-0 rounded-full bg-white/20 px-2.5 py-1 text-[10px] font-semibold tracking-wider sm:px-3 sm:text-xs">
                 DIGITAL PASS
               </span>
+
             </div>
 
-            <p className="mt-6 text-sm text-blue-100">
-              EVENT
-            </p>
+            <div className="mt-6 min-w-0 sm:mt-8">
 
-            <h3 className="mt-1 text-3xl font-bold">
-              {ticket?.event_title || "Event"}
-            </h3>
+              <p className="text-xs font-medium uppercase tracking-wider text-blue-100 sm:text-sm">
+                Event
+              </p>
 
-            <p className="mt-3 text-blue-100">
-              {ticket?.event_location || "Venue unavailable"}
-            </p>
+              <h3 className="mt-2 break-words text-2xl font-bold leading-tight sm:text-3xl">
+                {ticket?.event_title || "Event"}
+              </h3>
+
+              <p className="mt-3 break-words text-sm leading-relaxed text-blue-100 sm:text-base">
+                {ticket?.event_location || "Venue unavailable"}
+              </p>
+
+            </div>
+
           </div>
 
-          <div className="space-y-6 p-6 sm:p-8">
+          {/* Pass Details */}
+          <div className="space-y-5 p-4 sm:space-y-6 sm:p-7 md:p-8">
 
-            <div className="flex items-center justify-between gap-3">
-              <span className="text-sm text-gray-500">
+            {/* Booking Status */}
+            <div className="flex min-w-0 flex-wrap items-center justify-between gap-3">
+
+              <span className="text-sm font-medium text-gray-500">
                 Booking Status
               </span>
 
               <span
-                className={`rounded-full px-3 py-1 text-sm font-semibold ${
+                className={`inline-flex max-w-full break-words rounded-full px-3 py-1.5 text-xs font-semibold sm:text-sm ${
                   isConfirmed
                     ? "bg-green-100 text-green-700"
                     : "bg-yellow-100 text-yellow-700"
@@ -167,99 +191,140 @@ export default function BookingConfirmation() {
               >
                 {booking.booking_status}
               </span>
+
             </div>
 
-            <div className="grid grid-cols-2 gap-5">
-              <div>
-                <p className="text-xs font-medium uppercase text-gray-500">
+            {/* Booking Details Grid */}
+            <div className="grid min-w-0 grid-cols-1 gap-5 border-t border-gray-100 pt-5 sm:grid-cols-2">
+
+              {/* Booking ID */}
+              <div className="min-w-0">
+
+                <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">
                   Booking ID
                 </p>
-                <p className="mt-2 font-bold text-gray-900">
+
+                <p className="mt-2 break-all text-base font-bold text-gray-900 sm:text-lg">
                   #{booking.id}
                 </p>
+
               </div>
 
-              <div>
-                <p className="text-xs font-medium uppercase text-gray-500">
+              {/* Ticket Tier */}
+              <div className="min-w-0">
+
+                <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">
                   Ticket Tier
                 </p>
-                <p className="mt-2 font-bold text-gray-900">
+
+                <p className="mt-2 break-words text-base font-bold text-gray-900 sm:text-lg">
                   {ticket?.tier_name || "Ticket"}
                 </p>
+
               </div>
 
-              <div>
-                <p className="text-xs font-medium uppercase text-gray-500">
+              {/* Quantity */}
+              <div className="min-w-0">
+
+                <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">
                   Quantity
                 </p>
-                <p className="mt-2 font-bold text-gray-900">
+
+                <p className="mt-2 text-base font-bold text-gray-900 sm:text-lg">
                   {booking.quantity}
                 </p>
+
               </div>
 
-              <div>
-                <p className="text-xs font-medium uppercase text-gray-500">
+              {/* Price Per Ticket */}
+              <div className="min-w-0">
+
+                <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">
                   Price Per Ticket
                 </p>
-                <p className="mt-2 font-bold text-gray-900">
+
+                <p className="mt-2 break-words text-base font-bold text-gray-900 sm:text-lg">
                   {formatMoney(ticket?.price)}
                 </p>
+
               </div>
+
             </div>
 
-            <div className="border-t border-dashed border-gray-300 pt-5">
-              <p className="text-xs font-medium uppercase text-gray-500">
+            {/* Event Date */}
+            <div className="min-w-0 border-t border-dashed border-gray-300 pt-5">
+
+              <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">
                 Event Date & Time
               </p>
-              <p className="mt-2 font-semibold text-gray-900">
+
+              <p className="mt-2 break-words text-sm font-semibold leading-relaxed text-gray-900 sm:text-base">
                 {formatDate(ticket?.event_date)}
               </p>
+
             </div>
 
-            <div className="border-t border-dashed border-gray-300 pt-5">
-              <p className="text-xs font-medium uppercase text-gray-500">
+            {/* Booking Date */}
+            <div className="min-w-0 border-t border-dashed border-gray-300 pt-5">
+
+              <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">
                 Booking Date
               </p>
-              <p className="mt-2 text-gray-900">
+
+              <p className="mt-2 break-words text-sm leading-relaxed text-gray-900 sm:text-base">
                 {formatDate(booking.booked_at)}
               </p>
+
             </div>
 
-            <div className="rounded-xl bg-blue-50 p-5">
-              <div className="flex items-center justify-between gap-3">
-                <span className="font-semibold text-gray-700">
+            {/* Total Amount */}
+            <div className="rounded-xl border border-blue-100 bg-blue-50 p-4 sm:p-5">
+
+              <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+
+                <span className="text-sm font-semibold text-gray-700 sm:text-base">
                   Total Amount
                 </span>
 
-                <span className="text-2xl font-bold text-blue-700">
+                <span className="break-words text-2xl font-bold text-blue-700 sm:text-2xl">
                   {formatMoney(booking.total_amount)}
                 </span>
+
               </div>
+
             </div>
 
-            <p className="text-center text-xs text-gray-500">
+            {/* Booking Reminder */}
+            <p className="break-words text-center text-xs leading-relaxed text-gray-500 sm:text-sm">
               Please keep this booking ID for future reference.
             </p>
+
           </div>
+
         </section>
 
+        {/* Action Buttons */}
         <div className="mt-6 flex flex-col gap-3 sm:flex-row print:hidden">
+
           <button
             type="button"
             onClick={() => window.print()}
-            className="flex-1 rounded-lg bg-blue-600 px-5 py-3 font-semibold text-white hover:bg-blue-700"
+            className="inline-flex min-h-12 w-full flex-1 items-center justify-center rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:text-base"
           >
             Print Booking Pass
           </button>
 
           <Link
             to="/events"
-            className="flex-1 rounded-lg border border-gray-300 bg-white px-5 py-3 text-center font-semibold text-gray-700 hover:bg-gray-50"
+            className="inline-flex min-h-12 w-full flex-1 items-center justify-center rounded-xl border border-gray-300 bg-white px-5 py-3 text-center text-sm font-semibold text-gray-700 transition hover:bg-gray-50 sm:text-base"
           >
             Explore More Events
           </Link>
+
         </div>
+
       </div>
+
     </main>
   );
 }
