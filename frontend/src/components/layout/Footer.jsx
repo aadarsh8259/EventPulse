@@ -1,10 +1,9 @@
 
-export default function Footer() {
-  const currentYear = new Date().getFullYear();
+const CURRENT_YEAR = new Date().getFullYear();
 
+export default function Footer() {
   return (
     <footer className="mt-auto w-full border-t border-gray-800 bg-gray-900 text-white">
-
       <div className="mx-auto flex w-full max-w-7xl flex-col items-center gap-4 px-4 py-8 text-center sm:px-6 sm:py-10 md:flex-row md:justify-between md:text-left lg:px-8">
 
         {/* Brand information */}
@@ -20,11 +19,10 @@ export default function Footer() {
 
         {/* Copyright */}
         <p className="text-xs leading-5 text-gray-400 sm:text-sm">
-          © {currentYear} EventPulse. All rights reserved.
+          © {CURRENT_YEAR} EventPulse. All rights reserved.
         </p>
 
       </div>
-
     </footer>
   );
 }

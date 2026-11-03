@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
 
-import { useToast } from "../context/ToastContext";
+import { useToast } from "../context/useToast";
 import { registerUser } from "../api/auth";
 
 export default function Register() {

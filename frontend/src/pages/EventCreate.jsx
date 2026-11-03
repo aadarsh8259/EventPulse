@@ -3,6 +3,11 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import apiClient from "../api/client";
 
+// Minimum date/time for the event.
+const MIN_EVENT_DATE_TIME = new Date(
+  Date.now() - new Date().getTimezoneOffset() * 60000
+).toISOString().slice(0, 16);
+
 export default function EventCreate() {
   const navigate = useNavigate();
 
@@ -26,12 +31,7 @@ export default function EventCreate() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Minimum date/time for the event.
-  const minDateTime = new Date(
-    Date.now() - new Date().getTimezoneOffset() * 60000
-  )
-    .toISOString()
-    .slice(0, 16);
+
 
   // Update event fields.
   const handleChange = (event) => {
@@ -382,7 +382,7 @@ export default function EventCreate() {
                   type="datetime-local"
                   name="date"
                   value={formData.date}
-                  min={minDateTime}
+                  min={MIN_EVENT_DATE_TIME}
                   onChange={handleChange}
                   required
                   className="min-h-12 w-full min-w-0 rounded-xl border border-gray-300 bg-white px-3 py-3 text-sm text-gray-900 outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100 sm:text-base"

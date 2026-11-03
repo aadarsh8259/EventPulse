@@ -1,5 +1,5 @@
 
-import { useToast } from "../context/ToastContext";
+import { useToast } from "../context/useToast";
 
 export default function Home() {
   const { showToast } = useToast();
